@@ -1,0 +1,66 @@
+---
+
+name: 🐘 PostgreSQL
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    branches:
+      - 1.x
+  push:
+    branches:
+      - 1.x
+
+jobs:
+  acceptance:
+    name: PostgreSQL · PHP ${{ matrix.php-version }}
+    timeout-minutes: 8
+    runs-on: ubuntu-latest
+    concurrency:
+      cancel-in-progress: true
+      group: pgsql-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ matrix.php-version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version:
+          - '8.4'
+          - '8.5'
+    steps:
+      - name: 📦 Check out the codebase
+        uses: actions/checkout@v6
+
+      - name: 🛠️ Start PostgreSQL
+        run: docker compose -f tests/docker-compose.yml up -d cycle-postgres
+
+      - name: 🛠️ Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: pdo, pdo_sqlite, pdo_pgsql
+          ini-values: error_reporting=E_ALL
+
+      - name: 📥 Install dependencies with composer
+        uses: ramsey/composer-install@v3
+        env:
+          COMPOSER_ROOT_VERSION: '1.x-dev'
+        with:
+          dependency-versions: highest
+
+      - name: ⏳ Wait for PostgreSQL
+        run: |
+          for i in $(seq 1 30); do
+            if docker exec $(docker ps -qf "ancestor=postgres:15.2") pg_isready -U postgres; then
+              echo "PostgreSQL is up"; exit 0
+            fi
+            echo "Waiting for PostgreSQL... ($i)"; sleep 2
+          done
+          echo "PostgreSQL did not become ready in time"; exit 1
+
+      - name: 🧪 Run acceptance tests (PostgreSQL)
+        env:
+          DB: postgres
+          POSTGRES_HOST: 127.0.0.1
+          POSTGRES_PORT: 15432
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: 'YourStrong!Passw0rd'
+          POSTGRES_DATABASE: spiral
+        run: composer test:acceptance

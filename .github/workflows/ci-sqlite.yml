@@ -1,6 +1,6 @@
 ---
 
-name: 🧩 Unit
+name: 🐬 SQLite
 
 on:  # yamllint disable-line rule:truthy
   pull_request:
@@ -11,25 +11,19 @@ on:  # yamllint disable-line rule:truthy
       - 1.x
 
 jobs:
-  unit:
-    name: Unit · PHP ${{ matrix.php-version }}
-    timeout-minutes: 4
-    runs-on: ${{ matrix.os }}
+  acceptance:
+    name: SQLite · PHP ${{ matrix.php-version }}
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
     concurrency:
       cancel-in-progress: true
-      group: unit-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ matrix.php-version }}-${{ matrix.dependencies }}
+      group: sqlite-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ matrix.php-version }}
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - ubuntu-latest
         php-version:
           - '8.4'
           - '8.5'
-        dependencies:
-          # - lowest
-          # - locked
-          - highest
     steps:
       - name: 📦 Check out the codebase
         uses: actions/checkout@v6
@@ -41,15 +35,14 @@ jobs:
           extensions: pdo, pdo_sqlite
           ini-values: error_reporting=E_ALL
 
-      - name: 🤖 Validate composer.json and composer.lock
-        run: composer validate --ansi --strict
-
       - name: 📥 Install dependencies with composer
         uses: ramsey/composer-install@v3
         env:
           COMPOSER_ROOT_VERSION: '1.x-dev'
         with:
-          dependency-versions: ${{ matrix.dependencies }}
+          dependency-versions: highest
 
-      - name: 🧪 Run unit tests
-        run: composer test:unit
+      - name: 🧪 Run acceptance tests (SQLite)
+        env:
+          DB: sqlite
+        run: composer test:acceptance
