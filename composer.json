@@ -1,0 +1,50 @@
+{
+    "name": "cycle/transaction",
+    "description": "Transaction abstraction for Cycle ORM: run DBAL operations and a scoped Entity Manager within a single database transaction.",
+    "type": "library",
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "Aleksei Gagarin",
+            "homepage": "https://github.com/roxblnfk"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "cycle/database": "^2.18",
+        "cycle/orm": "^2.10"
+    },
+    "require-dev": {
+        "testo/testo": "^0.10.20",
+        "vimeo/psalm": "^7",
+        "llm/skills": "^1.7",
+        "cycle/skills": "1.x-dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "Cycle\\Transaction\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Cycle\\Transaction\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "testo",
+        "test:unit": "testo --suite=Unit",
+        "test:acceptance": "testo --suite=Acceptance",
+        "test:integration": "testo --suite=Acceptance",
+        "psalm": "psalm",
+        "infection": "infection"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "infection/extension-installer": true,
+            "llm/skills": true
+        }
+    }
+}

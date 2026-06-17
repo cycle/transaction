@@ -1,0 +1,150 @@
+---
+
+name: 🧪 Testing
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    branches:
+      - 1.x
+  push:
+    branches:
+      - 1.x
+
+jobs:
+  unit:
+    name: 🧩 Unit
+    timeout-minutes: 4
+    runs-on: ${{ matrix.os }}
+    concurrency:
+      cancel-in-progress: true
+      group: unit-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ matrix.php-version }}-${{ matrix.dependencies }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+        php-version:
+          - '8.4'
+          - '8.5'
+        dependencies:
+          # - lowest
+          # - locked
+          - highest
+    steps:
+      - name: 📦 Check out the codebase
+        uses: actions/checkout@v6
+
+      - name: 🛠️ Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          ini-values: error_reporting=E_ALL
+
+      - name: 🤖 Validate composer.json and composer.lock
+        run: composer validate --ansi --strict
+
+      - name: 📥 Install dependencies with composer
+        uses: ramsey/composer-install@v3
+        env:
+          COMPOSER_ROOT_VERSION: '1.x-dev'
+        with:
+          dependency-versions: ${{ matrix.dependencies }}
+
+      - name: 🧪 Run unit tests
+        run: composer test:unit
+
+  acceptance:
+    name: 🛢️ Acceptance (${{ matrix.driver }})
+    timeout-minutes: 8
+    runs-on: ubuntu-latest
+    concurrency:
+      cancel-in-progress: true
+      group: acceptance-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ matrix.php-version }}-${{ matrix.driver }}
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version:
+          - '8.4'
+        driver:
+          - sqlite
+          - mysql
+          - postgres
+          - sqlserver
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: 'YourStrong!Passw0rd'
+          MYSQL_DATABASE: spiral
+        ports:
+          - 13306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: 'YourStrong!Passw0rd'
+          POSTGRES_DB: spiral
+        ports:
+          - 15432:5432
+        options: >-
+          --health-cmd="pg_isready"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2019-latest
+        env:
+          ACCEPT_EULA: 'Y'
+          SA_PASSWORD: 'YourStrong!Passw0rd'
+        ports:
+          - 11433:1433
+        options: >-
+          --health-cmd="/opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P 'YourStrong!Passw0rd' -Q 'SELECT 1' -b"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=15
+
+    steps:
+      - name: 📦 Check out the codebase
+        uses: actions/checkout@v6
+
+      - name: 🛠️ Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: pdo, pdo_sqlite, pdo_mysql, pdo_pgsql, sqlsrv, pdo_sqlsrv
+          ini-values: error_reporting=E_ALL
+
+      - name: 📥 Install dependencies with composer
+        uses: ramsey/composer-install@v3
+        env:
+          COMPOSER_ROOT_VERSION: '1.x-dev'
+        with:
+          dependency-versions: highest
+
+      - name: 🧪 Run acceptance tests
+        env:
+          DB: ${{ matrix.driver }}
+          MYSQL_HOST: 127.0.0.1
+          MYSQL_PORT: 13306
+          MYSQL_USER: root
+          MYSQL_PASSWORD: 'YourStrong!Passw0rd'
+          MYSQL_DATABASE: spiral
+          POSTGRES_HOST: 127.0.0.1
+          POSTGRES_PORT: 15432
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: 'YourStrong!Passw0rd'
+          POSTGRES_DATABASE: spiral
+          SQLSERVER_HOST: 127.0.0.1
+          SQLSERVER_PORT: 11433
+          SQLSERVER_USER: SA
+          SQLSERVER_PASSWORD: 'YourStrong!Passw0rd'
+          SQLSERVER_DATABASE: tempdb
+        run: composer test:integration
