@@ -57,10 +57,9 @@ jobs:
 
       - name: 🧪 Run acceptance tests (PostgreSQL)
         env:
-          DB: postgres
           POSTGRES_HOST: 127.0.0.1
           POSTGRES_PORT: 15432
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: 'YourStrong!Passw0rd'
           POSTGRES_DATABASE: spiral
-        run: composer test:acceptance
+        run: composer test:postgres

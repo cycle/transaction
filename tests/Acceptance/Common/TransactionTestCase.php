@@ -12,6 +12,7 @@ use Cycle\Transaction\Tests\Fixtures\Post;
 use Cycle\Transaction\Tests\Fixtures\User;
 use Cycle\Transaction\TransactionMode;
 use Testo\Assert;
+use Testo\Filter\Group;
 
 /**
  * Acceptance scenarios for {@see \Cycle\Transaction\Transaction} executed against a real database.
@@ -20,6 +21,7 @@ use Testo\Assert;
  * {@see BaseTestCase::ensureDriver()} first, which boots the driver environment or skips the test
  * when the driver is disabled/unavailable.
  */
+#[Group('driver')]
 abstract class TransactionTestCase extends BaseTestCase
 {
     public function commitsInsertedRow(): void

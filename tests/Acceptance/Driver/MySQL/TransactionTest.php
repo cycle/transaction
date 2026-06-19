@@ -7,9 +7,11 @@ namespace Cycle\Transaction\Tests\Acceptance\Driver\MySQL;
 use Cycle\Transaction\Internal\TransactionImpl;
 use Cycle\Transaction\Tests\Acceptance\Common\TransactionTestCase;
 use Testo\Codecov\Covers;
+use Testo\Filter\Group;
 use Testo\Test;
 
 #[Test]
+#[Group('driver-mysql')]
 #[Covers(TransactionImpl::class)]
 final class TransactionTest extends TransactionTestCase
 {

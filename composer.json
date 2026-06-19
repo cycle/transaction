@@ -15,7 +15,7 @@
         "cycle/orm": "^2.10"
     },
     "require-dev": {
-        "testo/testo": "^0.10.20",
+        "testo/testo": "^0.10.24",
         "vimeo/psalm": "^7",
         "llm/skills": "^1.7",
         "cycle/skills": "1.x-dev"
@@ -35,6 +35,23 @@
         "test:unit": "testo --suite=Unit",
         "test:acceptance": "testo --suite=Acceptance",
         "test:integration": "testo --suite=Acceptance",
+        "test:no-driver": "testo --group=!driver",
+        "test:sqlite": [
+            "@putenv DB=sqlite",
+            "testo --suite=Acceptance --group=driver-sqlite"
+        ],
+        "test:mysql": [
+            "@putenv DB=mysql",
+            "testo --suite=Acceptance --group=driver-mysql"
+        ],
+        "test:postgres": [
+            "@putenv DB=postgres",
+            "testo --suite=Acceptance --group=driver-postgres"
+        ],
+        "test:sqlserver": [
+            "@putenv DB=sqlserver",
+            "testo --suite=Acceptance --group=driver-sqlserver"
+        ],
         "psalm": "psalm",
         "infection": "infection"
     },

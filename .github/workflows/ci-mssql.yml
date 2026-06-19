@@ -66,10 +66,9 @@ jobs:
 
       - name: 🧪 Run acceptance tests (SQLServer)
         env:
-          DB: sqlserver
           SQLSERVER_HOST: 127.0.0.1
           SQLSERVER_PORT: 11433
           SQLSERVER_USER: SA
           SQLSERVER_PASSWORD: 'YourStrong!Passw0rd'
           SQLSERVER_DATABASE: tempdb
-        run: composer test:acceptance
+        run: composer test:sqlserver

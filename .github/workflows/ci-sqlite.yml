@@ -43,6 +43,4 @@ jobs:
           dependency-versions: highest
 
       - name: 🧪 Run acceptance tests (SQLite)
-        env:
-          DB: sqlite
-        run: composer test:acceptance
+        run: composer test:sqlite

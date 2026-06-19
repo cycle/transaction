@@ -57,10 +57,9 @@ jobs:
 
       - name: 🧪 Run acceptance tests (MySQL)
         env:
-          DB: mysql
           MYSQL_HOST: 127.0.0.1
           MYSQL_PORT: 13306
           MYSQL_USER: root
           MYSQL_PASSWORD: 'YourStrong!Passw0rd'
           MYSQL_DATABASE: spiral
-        run: composer test:acceptance
+        run: composer test:mysql
