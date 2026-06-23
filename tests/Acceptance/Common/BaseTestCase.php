@@ -11,44 +11,41 @@ use Cycle\Database\DatabaseInterface;
 use Cycle\Database\Exception\DBALException;
 use Cycle\Transaction\Tests\Fixtures\TestEnvironment;
 use Cycle\Transaction\Transaction;
-use Testo\Core\Exception\SkipTest;
 use Testo\Lifecycle\AfterTest;
+use Testo\Lifecycle\BeforeTest;
 
 /**
  * Base class for acceptance tests executed against a real database driver.
  *
- * Concrete per-driver subclasses (e.g. {@see \Cycle\Transaction\Tests\Acceptance\Driver\SQLite})
- * declare the {@see DRIVER} constant and carry the class-level `#[Test]` attribute. Because Testo
- * skips abstract classes during discovery but collects inherited public methods of concrete
- * classes, every test method defined here runs once per concrete driver subclass.
+ * The driver under test is provided by the concrete per-driver subclass through {@see driverConfig()};
+ * which drivers run is decided entirely by inheritance — a subclass exists under `tests/Acceptance/Driver`
+ * only for the drivers a given test case supports, and the matching `#[Group('driver-*')]` selects it at
+ * run time (see the `test:*` composer scripts). There is no runtime "is this driver enabled" guard:
+ * if a subclass is collected, its driver is expected to be available (CI boots it via docker-compose).
  *
- * The driver under test is wired as the `default` database connection; an in-memory SQLite
- * connection is always used for the `secondary` database so cross-driver behaviour can be checked.
+ * Testo skips abstract classes during discovery but collects inherited public methods of concrete
+ * classes, so every test method defined in {@see TransactionTestCase} runs once per concrete subclass.
  *
- * Note: a test that cannot run for the current driver throws {@see SkipTest} from {@see ensureDriver()},
- * which must be called from the test body (not a lifecycle hook) so Testo reports it as *Skipped*
- * rather than *Aborted*. Every test calls {@see ensureDriver()} as its first statement.
+ * The driver under test is wired as the `default` database connection; an in-memory SQLite connection
+ * is always used for the `secondary` database so cross-driver behaviour can be checked.
  */
 abstract class BaseTestCase
 {
-    /** Driver name for the current subclass; overridden by concrete classes. */
-    public const DRIVER = null;
-
-    /**
-     * Driver config factories keyed by driver name. Populated by the acceptance bootstrap.
-     *
-     * @var array<non-empty-string, callable(): DriverConfig>
-     */
-    public static array $drivers = [];
-
-    /**
-     * Driver names enabled for this run (filtered by the `DB` env variable).
-     *
-     * @var list<non-empty-string>
-     */
-    public static array $activeDrivers = [];
-
     protected ?TestEnvironment $env = null;
+
+    /**
+     * Driver configuration for the `default` connection of the concrete subclass.
+     */
+    abstract protected function driverConfig(): DriverConfig;
+
+    #[BeforeTest]
+    public function bootEnvironment(): void
+    {
+        $this->env = new TestEnvironment(
+            defaultDriver: $this->driverConfig(),
+            secondaryDriver: new SQLiteDriverConfig(connection: new MemoryConnectionConfig()),
+        );
+    }
 
     #[AfterTest]
     public function shutdownEnvironment(): void
@@ -64,46 +61,6 @@ abstract class BaseTestCase
         }
 
         $this->env = null;
-    }
-
-    /**
-     * Boot the environment for the current driver or skip the test.
-     *
-     * Must be invoked from the test body. Throwing {@see SkipTest} here yields a *Skipped*
-     * verdict; the same throw from a `#[BeforeTest]` hook would be reported as *Aborted*.
-     */
-    protected function ensureDriver(): void
-    {
-        $driver = static::DRIVER;
-
-        if ($driver === null) {
-            throw new SkipTest('No DRIVER defined for ' . static::class);
-        }
-
-        if (!\in_array($driver, self::$activeDrivers, true)) {
-            throw new SkipTest(\sprintf('Driver `%s` is not enabled (set DB=%s to run).', $driver, $driver));
-        }
-
-        if (!isset(self::$drivers[$driver])) {
-            throw new SkipTest(\sprintf('No configuration registered for driver `%s`.', $driver));
-        }
-
-        if ($this->env !== null) {
-            return;
-        }
-
-        try {
-            $env = new TestEnvironment(
-                defaultDriver: (self::$drivers[$driver])(),
-                secondaryDriver: new SQLiteDriverConfig(connection: new MemoryConnectionConfig()),
-            );
-            // Force a connection so unavailable servers are reported as skips, not failures.
-            $env->dbal->database('default')->getDriver()->connect();
-        } catch (\Throwable $e) {
-            throw new SkipTest(\sprintf('Driver `%s` is not available: %s', $driver, $e->getMessage()));
-        }
-
-        $this->env = $env;
     }
 
     protected function transaction(): Transaction

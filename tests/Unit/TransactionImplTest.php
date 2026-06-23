@@ -7,6 +7,7 @@ namespace Cycle\Transaction\Tests\Unit;
 use Cycle\Database\DatabaseInterface;
 use Cycle\ORM\EntityManagerInterface;
 use Cycle\Transaction\Exception\TransactionException;
+use Cycle\Transaction\FlushMode;
 use Cycle\Transaction\Internal\TransactionImpl;
 use Cycle\Transaction\Tests\Fixtures\SqliteEnvironment;
 use Cycle\Transaction\Tests\Fixtures\TestEnvironment;
@@ -78,7 +79,7 @@ final class TransactionImplTest
         }
     }
 
-    public function autoRunFalseWithPendingChangesThrows(): never
+    public function failOnPendingWithPendingChangesThrows(): never
     {
         Expect::exception(TransactionException::class)
             ->withMessage('Entity Manager has pending changes.');
@@ -87,18 +88,18 @@ final class TransactionImplTest
             callback: static function (EntityManagerInterface $em): void {
                 $em->persist(new User('pending@example.com'));
             },
-            autoRun: false,
+            flush: FlushMode::FailOnPending,
         );
     }
 
-    public function autoRunFalseRollsBackWhenGuardTrips(): void
+    public function failOnPendingRollsBackWhenGuardTrips(): void
     {
         try {
             $this->env->transaction->transact(
                 callback: static function (EntityManagerInterface $em): void {
                     $em->persist(new User('pending@example.com'));
                 },
-                autoRun: false,
+                flush: FlushMode::FailOnPending,
             );
         } catch (TransactionException) {
             // expected
@@ -107,14 +108,67 @@ final class TransactionImplTest
         Assert::same($this->env->dbal->database('default')->table('user')->count(), 0);
     }
 
-    public function autoRunFalseWithoutPendingChangesCommits(): void
+    public function failOnPendingWithoutPendingChangesCommits(): void
     {
         $result = $this->env->transaction->transact(
             callback: static fn(): int => 7,
-            autoRun: false,
+            flush: FlushMode::FailOnPending,
         );
 
         Assert::same($result, 7);
+    }
+
+    public function failOnPendingCommitsWhenCallbackFlushesManually(): void
+    {
+        $this->env->transaction->transact(
+            callback: static function (EntityManagerInterface $em): void {
+                $em->persist(new User('manual@example.com'));
+                $em->run(); // no pending changes remain -> guard passes
+            },
+            flush: FlushMode::FailOnPending,
+        );
+
+        Assert::same($this->env->dbal->database('default')->table('user')->count(), 1);
+    }
+
+    public function onWriteFlushPersistsWithoutManualRun(): void
+    {
+        $this->env->transaction->transact(
+            callback: static function (EntityManagerInterface $em): void {
+                $em->persist(new User('onwrite@example.com'));
+                // No explicit run(): OnWrite flushes each operation immediately.
+            },
+            flush: FlushMode::OnWrite,
+        );
+
+        Assert::same($this->env->dbal->database('default')->table('user')->count(), 1);
+    }
+
+    public function skipPendingCommitsButDiscardsUnflushedChanges(): void
+    {
+        $this->env->transaction->transact(
+            callback: static function (EntityManagerInterface $em): void {
+                $em->persist(new User('skipped@example.com'));
+                // Left unflushed on purpose: SkipPending must commit silently and drop it.
+            },
+            flush: FlushMode::SkipPending,
+        );
+
+        // The DBAL transaction committed, but the unflushed entity was never written.
+        Assert::same($this->env->dbal->database('default')->table('user')->count(), 0);
+    }
+
+    public function skipPendingStillCommitsManuallyFlushedChanges(): void
+    {
+        $this->env->transaction->transact(
+            callback: static function (EntityManagerInterface $em): void {
+                $em->persist(new User('flushed@example.com'));
+                $em->run(); // explicitly flushed -> survives the commit
+            },
+            flush: FlushMode::SkipPending,
+        );
+
+        Assert::same($this->env->dbal->database('default')->table('user')->count(), 1);
     }
 
     public function resolvesDatabaseByConnectionName(): void
@@ -146,6 +200,32 @@ final class TransactionImplTest
             },
             source: null,
         );
+    }
+
+    public function commitTransactionAfterSuccessfulCallback(): void
+    {
+        $db = $this->env->dbal->database('default');
+
+        $this->env->transaction->transact(static fn(): null => null);
+
+        // After a successful transact(), the DBAL transaction must be fully committed (level = 0)
+        Assert::same($db->getDriver()->getTransactionLevel(), 0);
+    }
+
+    public function rollsBackChangesAlreadyFlushedInsideCallback(): void
+    {
+        try {
+            $this->env->transaction->transact(static function (EntityManagerInterface $em): void {
+                $em->persist(new User('flushed@example.com'));
+                $em->run(); // flush ORM changes into the open DBAL transaction
+                throw new \DomainException('after flush');
+            });
+        } catch (\DomainException) {
+            // expected
+        }
+
+        // Rollback must have undone the flushed entity
+        Assert::same($this->env->dbal->database('default')->table('user')->count(), 0);
     }
 
     public function openNewModeCommitsWithoutAnOuterTransaction(): void

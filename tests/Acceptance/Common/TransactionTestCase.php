@@ -8,6 +8,7 @@ use Cycle\Database\DatabaseInterface;
 use Cycle\ORM\EntityManagerInterface;
 use Cycle\ORM\ORMInterface;
 use Cycle\Transaction\Exception\TransactionException;
+use Cycle\Transaction\FlushMode;
 use Cycle\Transaction\Tests\Fixtures\Post;
 use Cycle\Transaction\Tests\Fixtures\User;
 use Cycle\Transaction\TransactionMode;
@@ -17,18 +18,17 @@ use Testo\Filter\Group;
 /**
  * Acceptance scenarios for {@see \Cycle\Transaction\Transaction} executed against a real database.
  *
- * Abstract: discovered and run only through the concrete per-driver subclasses. Each test calls
- * {@see BaseTestCase::ensureDriver()} first, which boots the driver environment or skips the test
- * when the driver is disabled/unavailable.
+ * Abstract: discovered and run only through the concrete per-driver subclasses under
+ * `tests/Acceptance/Driver`. Each subclass supplies its driver via {@see BaseTestCase::driverConfig()};
+ * {@see BaseTestCase::bootEnvironment()} boots the environment before every test. Which drivers a test
+ * case runs on is expressed purely by inheritance — a subclass exists only for the supported drivers.
  */
 #[Group('driver')]
 abstract class TransactionTestCase extends BaseTestCase
 {
     public function commitsInsertedRow(): void
     {
-        $this->ensureDriver();
-
-        $this->transaction()->transact(static function (EntityManagerInterface $em): void {
+$this->transaction()->transact(static function (EntityManagerInterface $em): void {
             $em->persist(new User('alice@example.com', 100));
         });
 
@@ -41,9 +41,7 @@ abstract class TransactionTestCase extends BaseTestCase
 
     public function commitsMultipleRowsInOneTransaction(): void
     {
-        $this->ensureDriver();
-
-        $this->transaction()->transact(static function (EntityManagerInterface $em): void {
+$this->transaction()->transact(static function (EntityManagerInterface $em): void {
             $em->persist(new User('a@example.com', 1));
             $em->persist(new User('b@example.com', 2));
             $em->persist(new User('c@example.com', 3));
@@ -54,9 +52,7 @@ abstract class TransactionTestCase extends BaseTestCase
 
     public function rollsBackOnExceptionInCallback(): void
     {
-        $this->ensureDriver();
-
-        try {
+try {
             $this->transaction()->transact(static function (EntityManagerInterface $em): void {
                 $em->persist(new User('ghost@example.com', 1));
                 throw new \DomainException('abort');
@@ -71,9 +67,7 @@ abstract class TransactionTestCase extends BaseTestCase
 
     public function returnsCallbackResult(): void
     {
-        $this->ensureDriver();
-
-        $result = $this->transaction()->transact(
+$result = $this->transaction()->transact(
             static fn(EntityManagerInterface $em): string => 'done',
         );
 
@@ -82,9 +76,7 @@ abstract class TransactionTestCase extends BaseTestCase
 
     public function providesDatabaseAndEntityManager(): void
     {
-        $this->ensureDriver();
-
-        $this->transaction()->transact(function (EntityManagerInterface $em, DatabaseInterface $db): void {
+$this->transaction()->transact(function (EntityManagerInterface $em, DatabaseInterface $db): void {
             Assert::instanceOf($em, EntityManagerInterface::class);
             Assert::same($db->getName(), 'default');
             // The transaction must be open inside the callback.
@@ -94,9 +86,7 @@ abstract class TransactionTestCase extends BaseTestCase
 
     public function dataSurvivesSequentialTransactions(): void
     {
-        $this->ensureDriver();
-
-        $this->transaction()->transact(static function (EntityManagerInterface $em): void {
+$this->transaction()->transact(static function (EntityManagerInterface $em): void {
             $em->persist(new User('first@example.com', 10));
         });
 
@@ -107,16 +97,14 @@ abstract class TransactionTestCase extends BaseTestCase
         Assert::same($this->database()->table('user')->count(), 2);
     }
 
-    public function autoRunFalseRejectsPendingChanges(): void
+    public function failOnPendingRejectsPendingChanges(): void
     {
-        $this->ensureDriver();
-
-        try {
+try {
             $this->transaction()->transact(
                 callback: static function (EntityManagerInterface $em): void {
                     $em->persist(new User('pending@example.com', 1));
                 },
-                autoRun: false,
+                flush: FlushMode::FailOnPending,
             );
             Assert::fail('Expected TransactionException for pending changes.');
         } catch (TransactionException $e) {
@@ -127,26 +115,47 @@ abstract class TransactionTestCase extends BaseTestCase
         Assert::same($this->database()->table('user')->count(), 0);
     }
 
-    public function autoRunFalseAllowsManualRun(): void
+    public function failOnPendingAllowsManualRun(): void
     {
-        $this->ensureDriver();
-
-        $this->transaction()->transact(
+$this->transaction()->transact(
             callback: static function (EntityManagerInterface $em): void {
                 $em->persist(new User('manual@example.com', 1));
                 $em->run();
             },
-            autoRun: false,
+            flush: FlushMode::FailOnPending,
         );
 
         Assert::same($this->database()->table('user')->count(), 1);
     }
 
+    public function onWriteFlushPersistsWithoutManualRun(): void
+    {
+$this->transaction()->transact(
+            callback: static function (EntityManagerInterface $em): void {
+                $em->persist(new User('onwrite@example.com', 1));
+            },
+            flush: FlushMode::OnWrite,
+        );
+
+        Assert::same($this->database()->table('user')->count(), 1);
+    }
+
+    public function skipPendingDiscardsUnflushedChanges(): void
+    {
+$this->transaction()->transact(
+            callback: static function (EntityManagerInterface $em): void {
+                $em->persist(new User('skipped@example.com', 1));
+                // Left unflushed: SkipPending commits the DBAL transaction and drops it.
+            },
+            flush: FlushMode::SkipPending,
+        );
+
+        Assert::same($this->database()->table('user')->count(), 0);
+    }
+
     public function openNewModePersistsRow(): void
     {
-        $this->ensureDriver();
-
-        $this->transaction()->transact(
+$this->transaction()->transact(
             callback: static function (EntityManagerInterface $em): void {
                 $em->persist(new User('opennew@example.com', 1));
             },
@@ -158,9 +167,7 @@ abstract class TransactionTestCase extends BaseTestCase
 
     public function ignoreModePersistsRow(): void
     {
-        $this->ensureDriver();
-
-        $this->transaction()->transact(
+$this->transaction()->transact(
             callback: static function (EntityManagerInterface $em): void {
                 $em->persist(new User('ignore@example.com', 1));
             },
@@ -172,9 +179,7 @@ abstract class TransactionTestCase extends BaseTestCase
 
     public function resolvesDatabaseByEntityClass(): void
     {
-        $this->ensureDriver();
-
-        $this->transaction()->transact(
+$this->transaction()->transact(
             callback: static function (EntityManagerInterface $em, DatabaseInterface $db): void {
                 Assert::same($db->getName(), 'default');
             },
@@ -184,9 +189,7 @@ abstract class TransactionTestCase extends BaseTestCase
 
     public function rejectsEntityFromAnotherDriver(): void
     {
-        $this->ensureDriver();
-
-        // Post is mapped to the in-memory SQLite `secondary` connection.
+// Post is mapped to the in-memory SQLite `secondary` connection.
         // Persisting it through a transaction scoped to the `default` driver must be rejected.
         try {
             $this->transaction()->transact(static function (EntityManagerInterface $em): void {
@@ -202,9 +205,7 @@ abstract class TransactionTestCase extends BaseTestCase
 
     public function deletesRowWithinTransaction(): void
     {
-        $this->ensureDriver();
-
-        $this->transaction()->transact(static function (EntityManagerInterface $em): void {
+$this->transaction()->transact(static function (EntityManagerInterface $em): void {
             $em->persist(new User('todelete@example.com', 1));
         });
         Assert::same($this->database()->table('user')->count(), 1);
@@ -221,9 +222,7 @@ abstract class TransactionTestCase extends BaseTestCase
 
     public function updatesRowWithinTransaction(): void
     {
-        $this->ensureDriver();
-
-        $this->transaction()->transact(static function (EntityManagerInterface $em): void {
+$this->transaction()->transact(static function (EntityManagerInterface $em): void {
             $em->persist(new User('update@example.com', 1));
         });
 
@@ -241,9 +240,7 @@ abstract class TransactionTestCase extends BaseTestCase
 
     public function exceptionFromCallbackPropagates(): void
     {
-        $this->ensureDriver();
-
-        try {
+try {
             $this->transaction()->transact(static function (EntityManagerInterface $em): void {
                 $em->persist(new User('nope@example.com', 1));
                 throw new \RuntimeException('explicit');

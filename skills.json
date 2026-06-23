@@ -1,5 +1,6 @@
 {
     "$schema": "https://raw.githubusercontent.com/roxblnfk/skills/master/resources/skills.schema.json",
     "target": ".claude/skills",
+    "aliases": [".agents/skills"],
     "discovery": true
 }

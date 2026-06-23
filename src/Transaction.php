@@ -22,9 +22,11 @@ interface Transaction
      * @param non-empty-string|class-string|null $source The database connection name or entity class.
      *        If null, the default database connection will be used.
      * @param TransactionMode $emMode The transaction mode for the Entity Manager.
-     * @param bool $autoRun Call {@see EntityManagerInterface::run()} before committing the transaction.
-     *        If false, the Entity Manager will be checked to ensure there are no pending changes, and an exception
-     *        will be thrown if there are any.
+     * @param FlushMode $flush Defines when and how the Entity Manager flushes its pending changes:
+     *        - {@see FlushMode::OnWrite} flushes every operation immediately;
+     *        - {@see FlushMode::BeforeCommit} flushes all collected changes once before committing;
+     *        - {@see FlushMode::FailOnPending} throws if any changes are left unflushed;
+     *        - {@see FlushMode::SkipPending} silently skips any unflushed changes.
      *
      * @return TResult
      *
@@ -38,6 +40,6 @@ interface Transaction
         callable $callback,
         ?string $source = null,
         TransactionMode $emMode = TransactionMode::Current,
-        bool $autoRun = true,
+        FlushMode $flush = FlushMode::BeforeCommit,
     ): mixed;
 }

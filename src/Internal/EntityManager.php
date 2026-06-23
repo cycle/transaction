@@ -10,10 +10,9 @@ use Cycle\ORM\Transaction\RunnerInterface;
 use Cycle\ORM\Transaction\StateInterface;
 use Cycle\ORM\Transaction\UnitOfWork;
 use Cycle\Transaction\Exception\TransactionException;
+use Cycle\Transaction\FlushMode;
 
 /**
- * Active Record Entity Manager.
- *
  * @internal
  */
 final class EntityManager implements EntityManagerInterface
@@ -27,7 +26,7 @@ final class EntityManager implements EntityManagerInterface
         private readonly ORMInterface $orm,
         private readonly RunnerInterface $runner,
         private readonly string $driverName,
-        private readonly bool $autoExecute = false, // если autoRun=false проверить EM что не пустой
+        private readonly FlushMode $flush = FlushMode::BeforeCommit,
     ) {}
 
     #[\Override]
@@ -35,7 +34,7 @@ final class EntityManager implements EntityManagerInterface
     {
         $this->validateSource($entity);
         $this->getUow()->persistState($entity, $cascade);
-        if ($this->autoExecute) { $this->run(); }
+        if ($this->flush === FlushMode::OnWrite) { $this->run(); }
         return $this;
     }
 
@@ -44,7 +43,7 @@ final class EntityManager implements EntityManagerInterface
     {
         $this->validateSource($entity);
         $this->getUow()->persistDeferred($entity, $cascade);
-        if ($this->autoExecute) { $this->run(); }
+        if ($this->flush === FlushMode::OnWrite) { $this->run(); }
         return $this;
     }
 
@@ -53,7 +52,7 @@ final class EntityManager implements EntityManagerInterface
     {
         $this->validateSource($entity);
         $this->getUow()->delete($entity, $cascade);
-        if ($this->autoExecute) { $this->run(); }
+        if ($this->flush === FlushMode::OnWrite) { $this->run(); }
         return $this;
     }
 

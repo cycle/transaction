@@ -9,6 +9,7 @@ use Cycle\Database\DatabaseProviderInterface;
 use Cycle\ORM\ORMInterface;
 use Cycle\ORM\Transaction\Runner;
 use Cycle\Transaction\Exception\TransactionException;
+use Cycle\Transaction\FlushMode;
 use Cycle\Transaction\Transaction;
 use Cycle\Transaction\TransactionMode;
 
@@ -24,7 +25,7 @@ final class TransactionImpl implements Transaction
         callable $callback,
         ?string $source = null,
         TransactionMode $emMode = TransactionMode::Current,
-        bool $autoRun = true,
+        FlushMode $flush = FlushMode::BeforeCommit,
     ): mixed {
         // Resolve DB name from the entity role
         $db = $this->resolveDatabase($source);
@@ -34,18 +35,23 @@ final class TransactionImpl implements Transaction
             $this->orm,
             $this->getRunner($emMode),
             $db->getDriver()->getName(),
+            $flush,
         );
 
         $db->begin();
         try {
             $result = $callback($em, $db);
 
-            // Auto-run UoW if requested
-            if ($autoRun) {
-                $em->run();
-            } elseif ($em->hasPendingChanges()) {
-                throw new TransactionException('Entity Manager has pending changes.');
-            }
+            // Resolve the pending changes according to the flush mode
+            match ($flush) {
+                // OnWrite has already flushed each operation; the final run() is a no-op.
+                FlushMode::OnWrite,
+                FlushMode::BeforeCommit => $em->run(),
+                FlushMode::FailOnPending => $em->hasPendingChanges()
+                    ? throw new TransactionException('Entity Manager has pending changes.')
+                    : null,
+                FlushMode::SkipPending => null,
+            };
 
             // Commit transaction and return the callback result
             $db->commit();
