@@ -48,3 +48,8 @@ jobs:
 
       - name: 🧬 Run mutation testing with Infection
         run: composer infect:ci
+        env:
+          # Upload the report to the Stryker dashboard only on push to 1.x.
+          # On pull requests (and forks) the key is empty, so Infection skips the upload
+          # instead of overwriting the branch report with PR data.
+          STRYKER_DASHBOARD_API_KEY: ${{ github.event_name == 'push' && secrets.STRYKER_DASHBOARD_API_KEY || '' }}
