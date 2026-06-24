@@ -248,6 +248,64 @@ final class EntityManagerTest
         Assert::same($db->table('user')->count(), 2);
     }
 
+    public function deleteRemovesPersistedEntity(): void
+    {
+        $db = $this->env->dbal->database('default');
+        $db->begin();
+        $em = $this->makeManager();
+
+        $user = new User('todelete@example.com');
+        $em->persist($user);
+        $em->run();
+
+        $em->delete($user);
+        $em->run();
+        $db->commit();
+
+        Assert::same($db->table('user')->count(), 0);
+    }
+
+    public function deleteWithOnWriteFlushRemovesWithoutExplicitRun(): void
+    {
+        $db = $this->env->dbal->database('default');
+        $db->begin();
+        $em = new EntityManager(
+            $this->env->orm,
+            Runner::outerTransaction(strict: true),
+            $db->getDriver()->getName(),
+            flush: FlushMode::OnWrite,
+        );
+
+        $user = new User('delonwrite@example.com');
+        $em->persist($user); // flushed immediately
+        $em->delete($user);  // flushed immediately
+        $db->commit();
+
+        Assert::same($db->table('user')->count(), 0);
+    }
+
+    public function runThrowsWhenUnitOfWorkFails(): never
+    {
+        $db = $this->env->dbal->database('default');
+        $db->begin();
+        $em = $this->makeManager();
+
+        // Two fresh entities sharing the same primary key violate the PK constraint on flush.
+        $first = new User('dup@example.com');
+        $first->id = 1;
+        $second = new User('dup-too@example.com');
+        $second->id = 1;
+        $em->persist($first);
+        $em->persist($second);
+
+        try {
+            Expect::exception(\Throwable::class);
+            $em->run();
+        } finally {
+            $db->rollback();
+        }
+    }
+
     private function makeManager(): EntityManager
     {
         return new EntityManager(

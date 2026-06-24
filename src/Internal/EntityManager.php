@@ -34,7 +34,10 @@ final class EntityManager implements EntityManagerInterface
     {
         $this->validateSource($entity);
         $this->getUow()->persistState($entity, $cascade);
-        if ($this->flush === FlushMode::OnWrite) { $this->run(); }
+        if ($this->flush === FlushMode::OnWrite) {
+            $this->run();
+        }
+
         return $this;
     }
 
@@ -43,7 +46,10 @@ final class EntityManager implements EntityManagerInterface
     {
         $this->validateSource($entity);
         $this->getUow()->persistDeferred($entity, $cascade);
-        if ($this->flush === FlushMode::OnWrite) { $this->run(); }
+        if ($this->flush === FlushMode::OnWrite) {
+            $this->run();
+        }
+
         return $this;
     }
 
@@ -52,7 +58,10 @@ final class EntityManager implements EntityManagerInterface
     {
         $this->validateSource($entity);
         $this->getUow()->delete($entity, $cascade);
-        if ($this->flush === FlushMode::OnWrite) { $this->run(); }
+        if ($this->flush === FlushMode::OnWrite) {
+            $this->run();
+        }
+
         return $this;
     }
 
@@ -68,6 +77,7 @@ final class EntityManager implements EntityManagerInterface
         if (!$state->isSuccess()) {
             throw $state->getLastError() ?? new \RuntimeException('Transaction failed with unknown error');
         }
+
         return $state;
     }
 

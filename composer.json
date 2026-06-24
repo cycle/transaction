@@ -43,7 +43,12 @@
         "test:postgres": "testo --suite=Acceptance --group=driver-postgres",
         "test:sqlserver": "testo --suite=Acceptance --group=driver-sqlserver",
         "psalm": "psalm",
-        "infection": "infection"
+        "infection": "infection",
+        "infect:ci": [
+            "Composer\\Config::disableProcessTimeout",
+            "@putenv XDEBUG_MODE=coverage",
+            "infection --ansi --configuration=infection.json --logger-github --threads=max --show-mutations=0 --min-msi=50"
+        ]
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

@@ -1,0 +1,50 @@
+---
+
+name: 🧬 Mutation Tests
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    branches:
+      - 1.x
+  push:
+    branches:
+      - 1.x
+
+jobs:
+  infection:
+    name: Infection · PHP ${{ matrix.php-version }}
+    timeout-minutes: 10
+    runs-on: ${{ matrix.os }}
+    concurrency:
+      cancel-in-progress: true
+      group: infection-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ matrix.php-version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+        php-version:
+          - '8.4'
+        dependencies:
+          - highest
+    steps:
+      - name: 📦 Check out the codebase
+        uses: actions/checkout@v6
+
+      - name: 🛠️ Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: pdo, pdo_sqlite
+          ini-values: error_reporting=E_ALL
+          coverage: xdebug
+
+      - name: 📥 Install dependencies with composer
+        uses: ramsey/composer-install@v3
+        env:
+          COMPOSER_ROOT_VERSION: '1.x-dev'
+        with:
+          dependency-versions: ${{ matrix.dependencies }}
+
+      - name: 🧬 Run mutation testing with Infection
+        run: composer infect:ci

@@ -13,11 +13,11 @@ use Cycle\Transaction\FlushMode;
 use Cycle\Transaction\Transaction;
 use Cycle\Transaction\TransactionMode;
 
-final class TransactionImpl implements Transaction
+final readonly class TransactionImpl implements Transaction
 {
     public function __construct(
-        private readonly ORMInterface $orm,
-        private readonly DatabaseProviderInterface $dbs,
+        private ORMInterface $orm,
+        private DatabaseProviderInterface $dbs,
     ) {}
 
     #[\Override]

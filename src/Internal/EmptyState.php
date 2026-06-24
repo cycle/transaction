@@ -11,10 +11,10 @@ use Cycle\ORM\Transaction\StateInterface;
  *
  * @internal
  */
-final class EmptyState implements StateInterface
+final readonly class EmptyState implements StateInterface
 {
     public function __construct(
-        private readonly ?\Throwable $error = null,
+        private ?\Throwable $error = null,
     ) {}
 
     #[\Override]
