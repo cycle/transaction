@@ -42,6 +42,10 @@
         "test:mysql": "testo --suite=Acceptance --group=driver-mysql",
         "test:postgres": "testo --suite=Acceptance --group=driver-postgres",
         "test:sqlserver": "testo --suite=Acceptance --group=driver-sqlserver",
+        "test:cc": [
+            "@putenv XDEBUG_MODE=coverage",
+            "testo --group=!driver-mysql --group=!driver-postgres --group=!driver-sqlserver --coverage"
+        ],
         "psalm": "psalm",
         "infection": "infection",
         "infect:ci": [

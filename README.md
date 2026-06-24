@@ -13,7 +13,7 @@
 <div align="center">
 
 [![Build Status](https://img.shields.io/github/actions/workflow/status/cycle/transaction/testing.yml?branch=1.x&style=flat-square&label=tests)](https://github.com/cycle/transaction/actions)
-[![Codecov Coverage](https://img.shields.io/codecov/c/github/cycle/transaction?style=flat-square&logo=codecov)](https://app.codecov.io/gh/cycle/transaction)
+[![Codecov Coverage](https://img.shields.io/codecov/c/github/cycle/transaction/1.x?style=flat-square&logo=codecov)](https://app.codecov.io/gh/cycle/transaction/tree/1.x)
 [![Mutation testing badge](https://img.shields.io/endpoint?style=flat-square&label=mutation%20score&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Fcycle%2Ftransaction%2F1.x)](https://dashboard.stryker-mutator.io/reports/github.com/cycle/transaction/1.x)
 
 [![Discord](https://img.shields.io/discord/538114875570913290?style=flat-square&logo=discord&labelColor=7289d9&logoColor=white&color=39456d)](https://discord.gg/spiralphp)

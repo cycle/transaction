@@ -5,6 +5,10 @@ declare(strict_types=1);
 use Testo\Application\Config\ApplicationConfig;
 use Testo\Application\Config\FinderConfig;
 use Testo\Application\Config\SuiteConfig;
+use Testo\Codecov\CodecovPlugin;
+use Testo\Codecov\Config\CoverageLevel;
+use Testo\Codecov\Config\CoverageMode;
+use Testo\Codecov\Report\CloverReport;
 
 return new ApplicationConfig(
     src: ['src'],
@@ -16,6 +20,18 @@ return new ApplicationConfig(
         new SuiteConfig(
             name: 'Acceptance',
             location: new FinderConfig(include: ['tests/Acceptance/Driver']),
+        ),
+    ],
+    plugins: [
+        // Coverage is collected only when `--coverage` (or a report flag) is passed and an
+        // Xdebug/PCOV driver is available; the Clover report is uploaded to Codecov by CI
+        // (see `composer test:cc`).
+        new CodecovPlugin(
+            level: CoverageLevel::Line,
+            collect: CoverageMode::Never,
+            reports: [
+                new CloverReport(__DIR__ . '/runtime/clover.xml', 'cycle/transaction'),
+            ],
         ),
     ],
 );
