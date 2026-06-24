@@ -252,4 +252,73 @@ final class TransactionImplTest
 
         Assert::same($this->env->dbal->database('default')->table('user')->count(), 1);
     }
+
+    public function ignoreModeDoesNotCheckTransactionStatusWhenNoTransactionIsOpen(): void
+    {
+        $this->env->transaction->transact(
+            callback: static function (EntityManagerInterface $em, DatabaseInterface $db): void {
+                $em->persist(new User('first@example.com'));
+                $em->run(); // Flush first entity
+
+                // Rollback the outer transaction to close it
+                $db->rollback();
+
+                // Try to persist another entity after rollback.
+                // With strict: false, this should not throw because Ignore mode doesn't check transaction state.
+                // With strict: true (the mutation), this SHOULD throw RunnerException.
+                $em->persist(new User('second@example.com'));
+                $em->run();
+
+                // If we reach here, Ignore mode correctly ignored the transaction state
+                Assert::true(true);
+            },
+            emMode: TransactionMode::Ignore,
+        );
+    }
+
+    public function currentModeThrowsUnlikeIgnoreMode(): void
+    {
+        // Ignore mode successfully operates even after the transaction is rolled back
+        $ignoreModeCompleted = false;
+        try {
+            $this->env->transaction->transact(
+                callback: static function (EntityManagerInterface $em, DatabaseInterface $db): void {
+                    $em->persist(new User('ignore1@example.com'));
+                    $em->run();
+                    $db->rollback();
+                    $em->persist(new User('ignore2@example.com'));
+                    $em->run();
+                },
+                emMode: TransactionMode::Ignore,
+            );
+            $ignoreModeCompleted = true;
+        } catch (\Throwable $e) {
+            // Unexpected in Ignore mode
+            Assert::fail('Ignore mode should not throw when transaction is closed: ' . $e->getMessage());
+        }
+
+        // Current mode should throw when trying to operate after transaction is rolled back
+        // (because strict: true requires an open transaction)
+        $currentModeThrew = false;
+        try {
+            $this->env->transaction->transact(
+                callback: static function (EntityManagerInterface $em, DatabaseInterface $db): void {
+                    $em->persist(new User('current1@example.com'));
+                    $em->run();
+                    $db->rollback();
+                    $em->persist(new User('current2@example.com'));
+                    $em->run();
+                },
+                emMode: TransactionMode::Current,
+            );
+        } catch (\Throwable) {
+            // Expected in Current mode (strict: true)
+            $currentModeThrew = true;
+        }
+
+        // With original code: Ignore succeeds (strict:false), Current throws (strict:true)
+        // With mutation: Both would succeed (both strict:false)
+        Assert::true($ignoreModeCompleted, 'Ignore mode should complete without throwing');
+        Assert::true($currentModeThrew, 'Current mode should throw unlike Ignore mode');
+    }
 }

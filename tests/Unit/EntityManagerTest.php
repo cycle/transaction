@@ -306,6 +306,49 @@ final class EntityManagerTest
         }
     }
 
+    public function runThrowsActualDatabaseErrorWhenStateHasError(): void
+    {
+        $db = $this->env->dbal->database('default');
+        $db->begin();
+        $em = $this->makeManager();
+
+        // Create a duplicate that will cause a constraint violation.
+        // The UnitOfWork will attempt to run and capture the error.
+        // Original code: throw $state->getLastError() ?? new RuntimeException(...)
+        // Mutated code: throw new RuntimeException(...) ?? $state->getLastError()
+        // The mutation ignores the actual error and throws the generic RuntimeException.
+        $first = new User('dup@example.com');
+        $first->id = 1;
+        $second = new User('dup-too@example.com');
+        $second->id = 1;
+        $em->persist($first);
+        $em->persist($second);
+
+        try {
+            // We can't use Expect::exception on em->run() because the test framework
+            // won't let us catch the exception to check the message. Instead, we verify
+            // that a RuntimeException with the generic message is NOT thrown.
+            $exceptionThrown = null;
+            try {
+                $em->run();
+            } catch (\Throwable $e) {
+                $exceptionThrown = $e;
+            }
+
+            Assert::notNull($exceptionThrown, 'Expected an exception to be thrown');
+
+            // The critical check: with the mutation, this WOULD be a RuntimeException
+            // with message 'Transaction failed with unknown error'
+            if ($exceptionThrown instanceof \RuntimeException &&
+                $exceptionThrown->getMessage() === 'Transaction failed with unknown error') {
+                Assert::true(false, 'Got generic RuntimeException - mutation applied!');
+            }
+        } finally {
+            $db->rollback();
+        }
+    }
+
+
     private function makeManager(): EntityManager
     {
         return new EntityManager(
