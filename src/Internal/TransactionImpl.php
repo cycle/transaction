@@ -30,6 +30,14 @@ final readonly class TransactionImpl implements Transaction
         // Resolve DB name from the entity role
         $db = $this->resolveDatabase($source);
 
+        // In exclusive mode the transaction must be the top-level one: no outer transaction may wrap it,
+        // otherwise the committed changes could still be rolled back by the surrounding transaction.
+        if ($emMode === TransactionMode::Exclusive && $db->getDriver()->getTransactionLevel() !== 0) {
+            throw new TransactionException(
+                'An exclusive transaction cannot be started while another transaction is already open.',
+            );
+        }
+
         // Create Entity Manager instance
         $em = new EntityManager(
             $this->orm,
@@ -70,7 +78,8 @@ final readonly class TransactionImpl implements Transaction
         return match ($mode) {
             TransactionMode::Ignore => Runner::outerTransaction(strict: false),
             TransactionMode::Current => Runner::outerTransaction(strict: true),
-            TransactionMode::OpenNew => Runner::innerTransaction(),
+            TransactionMode::OpenNew,
+            TransactionMode::Exclusive => Runner::innerTransaction(),
         };
     }
 

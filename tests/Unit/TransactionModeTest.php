@@ -13,18 +13,18 @@ use Testo\Test;
 #[Covers(TransactionMode::class)]
 final class TransactionModeTest
 {
-    public function exposesThreeCases(): void
+    public function exposesFourCases(): void
     {
         $cases = TransactionMode::cases();
 
-        Assert::count($cases, 3);
+        Assert::count($cases, 4);
     }
 
     public function hasExpectedNames(): void
     {
         $names = \array_map(static fn(TransactionMode $m): string => $m->name, TransactionMode::cases());
 
-        Assert::same($names, ['Ignore', 'Current', 'OpenNew']);
+        Assert::same($names, ['Ignore', 'Current', 'OpenNew', 'Exclusive']);
     }
 
     public function isPureEnumWithoutBackingValue(): void

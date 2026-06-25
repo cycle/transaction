@@ -142,9 +142,10 @@ transaction. Pass it via the `$emMode` argument (defaults to `TransactionMode::C
 
 | Mode                       | Behaviour                                                                                      |
 |----------------------------|------------------------------------------------------------------------------------------------|
-| `TransactionMode::Current` | Reuse the currently opened transaction. Throws if none is open. **(default)**                  |
-| `TransactionMode::OpenNew` | Open a new inner transaction per driver connection and close it on finish.                     |
-| `TransactionMode::Ignore`  | Do not manage transactions for the Unit of Work.                                               |
+| `TransactionMode::Current`   | Reuse the currently opened transaction. Throws if none is open. **(default)**                |
+| `TransactionMode::OpenNew`   | Open a new inner transaction per driver connection and close it on finish.                   |
+| `TransactionMode::Ignore`    | Do not manage transactions for the Unit of Work.                                             |
+| `TransactionMode::Exclusive` | Like `OpenNew`, but require the transaction to be top-level. Throws if wrapped by another.    |
 
 ```php
 use Cycle\Transaction\TransactionMode;

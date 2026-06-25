@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Cycle\Transaction;
 
 use Cycle\ORM\Exception\RunnerException;
+use Cycle\Transaction\Exception\TransactionException;
 
 enum TransactionMode
 {
@@ -29,4 +30,18 @@ enum TransactionMode
      * @see \Cycle\ORM\Transaction\Runner::innerTransaction()
      */
     case OpenNew;
+
+    /**
+     * Like {@see self::OpenNew}, a new transaction is always opened for the Unit of Work and closed on
+     * finish, but it is additionally required to be exclusive: the transaction must be the top-level one
+     * and not wrapped by any outer transaction. If an outer transaction is already open, a
+     * {@see TransactionException} will be thrown before any work is done.
+     *
+     * This guarantees that the changes made within the transaction cannot be rolled back by a surrounding
+     * transaction once committed. It is useful, for example, for an idempotency service that must be sure
+     * its work is durably committed and not silently discarded by an enclosing transaction.
+     *
+     * @see \Cycle\ORM\Transaction\Runner::innerTransaction()
+     */
+    case Exclusive;
 }

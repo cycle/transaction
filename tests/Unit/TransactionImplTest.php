@@ -241,6 +241,57 @@ final class TransactionImplTest
         Assert::same($this->env->dbal->database('default')->table('user')->count(), 1);
     }
 
+    public function exclusiveModeCommitsWhenNoOuterTransactionIsOpen(): void
+    {
+        $this->env->transaction->transact(
+            callback: static function (EntityManagerInterface $em): void {
+                $em->persist(new User('exclusive@example.com'));
+            },
+            emMode: TransactionMode::Exclusive,
+        );
+
+        Assert::same($this->env->dbal->database('default')->table('user')->count(), 1);
+    }
+
+    public function exclusiveModeOpensItsOwnInnerTransaction(): void
+    {
+        // Exclusive uses an inner transaction for the UoW, independent of the outer begin().
+        // We close the outer transaction inside the callback; the EM must still persist via its own
+        // transaction. If Exclusive reused the current (outer, strict) transaction instead, calling
+        // run() after the outer transaction is gone would throw a RunnerException.
+        $this->env->transaction->transact(
+            callback: static function (EntityManagerInterface $em, DatabaseInterface $db): void {
+                $db->rollback(); // close the outer transaction opened by transact()
+                $em->persist(new User('exclusive-inner@example.com'));
+                $em->run();      // opens and commits its own inner transaction
+            },
+            emMode: TransactionMode::Exclusive,
+        );
+
+        Assert::same($this->env->dbal->database('default')->table('user')->count(), 1);
+    }
+
+    public function exclusiveModeThrowsWhenWrappedByAnotherTransaction(): never
+    {
+        Expect::exception(TransactionException::class)
+            ->withMessage('An exclusive transaction cannot be started while another transaction is already open.');
+
+        $db = $this->env->dbal->database('default');
+
+        // Open an outer transaction so the exclusive one is wrapped.
+        $db->begin();
+        try {
+            $this->env->transaction->transact(
+                callback: static function (EntityManagerInterface $em): void {
+                    $em->persist(new User('wrapped@example.com'));
+                },
+                emMode: TransactionMode::Exclusive,
+            );
+        } finally {
+            $db->rollback();
+        }
+    }
+
     public function ignoreModeCommitsUsingOuterTransaction(): void
     {
         $this->env->transaction->transact(
