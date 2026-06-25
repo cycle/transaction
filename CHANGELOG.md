@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/cycle/transaction/compare/1.0.0...1.1.0) (2026-06-25)
+
+
+### Features
+
+* Add Yii3, Laravel, and Spiral integrations ([89ee4b2](https://github.com/cycle/transaction/commit/89ee4b283f09d5d7cb286764b4d2125c84258649))
+* Expose `TransactionMode::Exclusive` ([16c70f6](https://github.com/cycle/transaction/commit/16c70f63407b20311f92f31fc6232f4a16edbd36))
+
 ## 1.0.0 (2026-06-24)
 
 The first stable release of `cycle/transaction` — a small transaction abstraction for Cycle ORM
