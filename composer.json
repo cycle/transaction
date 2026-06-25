@@ -15,12 +15,23 @@
         "cycle/orm": "^2.18"
     },
     "require-dev": {
+        "buggregator/trap": "^1.16",
         "cycle/skills": "1.x-dev",
+        "illuminate/container": "^11 || ^12 || ^13",
+        "illuminate/support": "^11 || ^12 || ^13",
         "infection/infection": ">=0.32.6",
         "llm/skills": "^1.7",
+        "spiral/boot": "^3.12",
+        "spiral/cycle-bridge": "^2.13",
         "testo/bridge-infection": "^0.1.6",
         "testo/testo": "^0.10.26",
-        "vimeo/psalm": "^7"
+        "vimeo/psalm": "^7",
+        "yiisoft/di": "^1.3"
+    },
+    "suggest": {
+        "spiral/cycle-bridge": "Provides integration with the Spiral Framework via TransactionBootloader",
+        "wayofdev/laravel-cycle-orm-adapter": "Provides Cycle ORM integration for Laravel (TransactionServiceProvider)",
+        "yiisoft/yii-cycle": "Provides Cycle ORM integration for the Yii Framework"
     },
     "autoload": {
         "psr-4": {
@@ -53,6 +64,21 @@
             "@putenv XDEBUG_MODE=coverage",
             "infection --ansi --configuration=infection.json --logger-github --threads=max --show-mutations=0 --min-msi=50"
         ]
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Cycle\\Transaction\\Bridge\\Laravel\\Providers\\TransactionServiceProvider"
+            ]
+        },
+        "config-plugin": {
+            "di": "src/Bridge/Yii3/config/di.php"
+        },
+        "spiral": {
+            "bootloaders": [
+                "Cycle\\Transaction\\Bridge\\Spiral\\Bootloader\\TransactionBootloader"
+            ]
+        }
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
