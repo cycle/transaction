@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="7.11.0">
+  <file src="src/Internal/EntityManager.php">
+    <UndefinedInterfaceMethod>
+      <code><![CDATA[getName]]></code>
+    </UndefinedInterfaceMethod>
+  </file>
+  <file src="src/Internal/TransactionImpl.php">
+    <UndefinedInterfaceMethod>
+      <code><![CDATA[getName]]></code>
+    </UndefinedInterfaceMethod>
+  </file>
+</files>
