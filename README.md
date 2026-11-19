@@ -13,12 +13,12 @@
 
 [![Documentation](https://img.shields.io/badge/Documentation-blue?style=for-the-badge&logo=gitbook&logoColor=white)](https://cycle-orm.dev/docs)
 [![Sponsor](https://img.shields.io/static/v1?style=for-the-badge&label=&message=Sponsor&logo=githubsponsors&logoColor=white&color=%23EA4AAA)](https://github.com/sponsors/cycle)
+[![Discord](https://img.shields.io/discord/538114875570913290?style=for-the-badge&logo=discord&labelColor=7289d9&logoColor=white&color=39456d)](https://discord.gg/spiralphp)
 
 [![Psalm Level](https://shepherd.dev/github/cycle/transaction/level.svg)](https://shepherd.dev/github/cycle/transaction)
 [![Type Coverage](https://shepherd.dev/github/cycle/transaction/coverage.svg)](https://shepherd.dev/github/cycle/transaction)
 [![Codecov](https://img.shields.io/codecov/c/github/cycle/transaction/1.x?style=flat-square&logo=codecov)](https://app.codecov.io/gh/cycle/transaction/tree/1.x)
 [![Mutation testing badge](https://img.shields.io/endpoint?style=flat-square&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Fcycle%2Ftransaction%2F1.x)](https://dashboard.stryker-mutator.io/reports/github.com/cycle/transaction/1.x)
-[![Discord](https://img.shields.io/discord/538114875570913290?style=flat-square&logo=discord&labelColor=7289d9&logoColor=white&color=39456d)](https://discord.gg/spiralphp)
 
 </div>
 
