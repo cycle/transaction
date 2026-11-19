@@ -1,27 +1,28 @@
 <div align="center">
-    <br>
     <a href="https://cycle-orm.dev" target="_blank">
         <picture>
             <source media="(prefers-color-scheme: dark)" srcset="https://github.com/cycle/.github/blob/main/logo/words-vector-dark.svg?raw=true">
             <img width="50%" align="center" src="https://github.com/cycle/.github/blob/main/logo/words-vector-light.svg?raw=true" alt="CycleORM Logo">
         </picture>
     </a>
-    <br>
-    <br>
 </div>
+
+<p align="center">Transaction abstraction for Cycle ORM</p>
 
 <div align="center">
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/cycle/transaction/testing.yml?branch=1.x&style=flat-square&label=tests)](https://github.com/cycle/transaction/actions)
-[![Codecov Coverage](https://img.shields.io/codecov/c/github/cycle/transaction/1.x?style=flat-square&logo=codecov)](https://app.codecov.io/gh/cycle/transaction/tree/1.x)
-[![Mutation testing badge](https://img.shields.io/endpoint?style=flat-square&label=mutation%20score&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Fcycle%2Ftransaction%2F1.x)](https://dashboard.stryker-mutator.io/reports/github.com/cycle/transaction/1.x)
+[![Documentation](https://img.shields.io/badge/Documentation-blue?style=for-the-badge&logo=gitbook&logoColor=white)](https://cycle-orm.dev/docs)
+[![Sponsor](https://img.shields.io/static/v1?style=for-the-badge&label=&message=Sponsor&logo=githubsponsors&logoColor=white&color=%23EA4AAA)](https://github.com/sponsors/cycle)
 
+[![Psalm Level](https://shepherd.dev/github/cycle/transaction/level.svg)](https://shepherd.dev/github/cycle/transaction)
+[![Type Coverage](https://shepherd.dev/github/cycle/transaction/coverage.svg)](https://shepherd.dev/github/cycle/transaction)
+[![Codecov](https://img.shields.io/codecov/c/github/cycle/transaction/1.x?style=flat-square&logo=codecov)](https://app.codecov.io/gh/cycle/transaction/tree/1.x)
+[![Mutation testing badge](https://img.shields.io/endpoint?style=flat-square&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Fcycle%2Ftransaction%2F1.x)](https://dashboard.stryker-mutator.io/reports/github.com/cycle/transaction/1.x)
 [![Discord](https://img.shields.io/discord/538114875570913290?style=flat-square&logo=discord&labelColor=7289d9&logoColor=white&color=39456d)](https://discord.gg/spiralphp)
-[![Follow on Twitter (X)](https://img.shields.io/badge/-Follow-black?style=flat-square&logo=X)](https://x.com/intent/follow?screen_name=SpiralPHP)
 
 </div>
 
-# Transaction Abstraction for Cycle ORM
+<br />
 
 This library provides a small transaction abstraction for Cycle ORM. It opens a single database
 transaction and lets you run raw DBAL operations together with a scoped
@@ -32,22 +33,20 @@ transaction is rolled back; otherwise it is committed. The Entity Manager is sco
 database connection for the duration of the callback, so accidental cross-connection writes are
 rejected instead of silently splitting your work across transactions.
 
-<br>
+## Get Started
 
-## Installation
-
-The preferred way to install this package is through [Composer](https://getcomposer.org/).
+### Installation
 
 ```bash
 composer require cycle/transaction
 ```
 
-[![PHP Version Require](https://poser.pugx.org/cycle/transaction/require/php?style=flat-square)](https://packagist.org/packages/cycle/transaction)
-[![Latest Stable Version](https://img.shields.io/packagist/v/cycle/transaction?&style=flat-square)](https://packagist.org/packages/cycle/transaction)
+[![PHP](https://img.shields.io/packagist/php-v/cycle/transaction.svg?style=flat-square&logo=php)](https://packagist.org/packages/cycle/transaction)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/cycle/transaction.svg?style=flat-square&logo=packagist)](https://packagist.org/packages/cycle/transaction)
 [![License](https://img.shields.io/packagist/l/cycle/transaction.svg?style=flat-square)](LICENSE.md)
-[![Total Downloads](https://img.shields.io/packagist/dt/cycle/transaction?&style=flat-square)](https://packagist.org/packages/cycle/transaction)
+[![Total Downloads](https://img.shields.io/packagist/dt/cycle/transaction.svg?style=flat-square)](https://packagist.org/packages/cycle/transaction/stats)
 
-<br>
+The package requires PHP 8.2+ and Cycle ORM 2.
 
 ## Usage
 
