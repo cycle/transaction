@@ -33,11 +33,6 @@ abstract class BaseTestCase
 {
     protected ?TestEnvironment $env = null;
 
-    /**
-     * Driver configuration for the `default` connection of the concrete subclass.
-     */
-    abstract protected function driverConfig(): DriverConfig;
-
     #[BeforeTest]
     public function bootEnvironment(): void
     {
@@ -62,6 +57,11 @@ abstract class BaseTestCase
 
         $this->env = null;
     }
+
+    /**
+     * Driver configuration for the `default` connection of the concrete subclass.
+     */
+    abstract protected function driverConfig(): DriverConfig;
 
     protected function transaction(): Transaction
     {

@@ -26,18 +26,6 @@ final class TransactionImplTest
 {
     private TestEnvironment $env;
 
-    #[BeforeTest]
-    public function setUp(): void
-    {
-        $this->env = SqliteEnvironment::create();
-    }
-
-    #[AfterTest]
-    public function tearDown(): void
-    {
-        $this->env->dropTables();
-    }
-
     public function returnsCallbackResult(): void
     {
         $result = $this->env->transaction->transact(
@@ -371,5 +359,17 @@ final class TransactionImplTest
         // With mutation: Both would succeed (both strict:false)
         Assert::true($ignoreModeCompleted, 'Ignore mode should complete without throwing');
         Assert::true($currentModeThrew, 'Current mode should throw unlike Ignore mode');
+    }
+
+    #[BeforeTest]
+    public function setUp(): void
+    {
+        $this->env = SqliteEnvironment::create();
+    }
+
+    #[AfterTest]
+    public function tearDown(): void
+    {
+        $this->env->dropTables();
     }
 }

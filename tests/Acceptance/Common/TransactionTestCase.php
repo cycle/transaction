@@ -28,7 +28,7 @@ abstract class TransactionTestCase extends BaseTestCase
 {
     public function commitsInsertedRow(): void
     {
-$this->transaction()->transact(static function (EntityManagerInterface $em): void {
+        $this->transaction()->transact(static function (EntityManagerInterface $em): void {
             $em->persist(new User('alice@example.com', 100));
         });
 
@@ -41,7 +41,7 @@ $this->transaction()->transact(static function (EntityManagerInterface $em): voi
 
     public function commitsMultipleRowsInOneTransaction(): void
     {
-$this->transaction()->transact(static function (EntityManagerInterface $em): void {
+        $this->transaction()->transact(static function (EntityManagerInterface $em): void {
             $em->persist(new User('a@example.com', 1));
             $em->persist(new User('b@example.com', 2));
             $em->persist(new User('c@example.com', 3));
@@ -52,7 +52,7 @@ $this->transaction()->transact(static function (EntityManagerInterface $em): voi
 
     public function rollsBackOnExceptionInCallback(): void
     {
-try {
+        try {
             $this->transaction()->transact(static function (EntityManagerInterface $em): void {
                 $em->persist(new User('ghost@example.com', 1));
                 throw new \DomainException('abort');
@@ -67,7 +67,7 @@ try {
 
     public function returnsCallbackResult(): void
     {
-$result = $this->transaction()->transact(
+        $result = $this->transaction()->transact(
             static fn(EntityManagerInterface $em): string => 'done',
         );
 
@@ -76,7 +76,7 @@ $result = $this->transaction()->transact(
 
     public function providesDatabaseAndEntityManager(): void
     {
-$this->transaction()->transact(function (EntityManagerInterface $em, DatabaseInterface $db): void {
+        $this->transaction()->transact(function (EntityManagerInterface $em, DatabaseInterface $db): void {
             Assert::instanceOf($em, EntityManagerInterface::class);
             Assert::same($db->getName(), 'default');
             // The transaction must be open inside the callback.
@@ -86,7 +86,7 @@ $this->transaction()->transact(function (EntityManagerInterface $em, DatabaseInt
 
     public function dataSurvivesSequentialTransactions(): void
     {
-$this->transaction()->transact(static function (EntityManagerInterface $em): void {
+        $this->transaction()->transact(static function (EntityManagerInterface $em): void {
             $em->persist(new User('first@example.com', 10));
         });
 
@@ -99,7 +99,7 @@ $this->transaction()->transact(static function (EntityManagerInterface $em): voi
 
     public function failOnPendingRejectsPendingChanges(): void
     {
-try {
+        try {
             $this->transaction()->transact(
                 callback: static function (EntityManagerInterface $em): void {
                     $em->persist(new User('pending@example.com', 1));
@@ -117,7 +117,7 @@ try {
 
     public function failOnPendingAllowsManualRun(): void
     {
-$this->transaction()->transact(
+        $this->transaction()->transact(
             callback: static function (EntityManagerInterface $em): void {
                 $em->persist(new User('manual@example.com', 1));
                 $em->run();
@@ -130,7 +130,7 @@ $this->transaction()->transact(
 
     public function onWriteFlushPersistsWithoutManualRun(): void
     {
-$this->transaction()->transact(
+        $this->transaction()->transact(
             callback: static function (EntityManagerInterface $em): void {
                 $em->persist(new User('onwrite@example.com', 1));
             },
@@ -142,7 +142,7 @@ $this->transaction()->transact(
 
     public function skipPendingDiscardsUnflushedChanges(): void
     {
-$this->transaction()->transact(
+        $this->transaction()->transact(
             callback: static function (EntityManagerInterface $em): void {
                 $em->persist(new User('skipped@example.com', 1));
                 // Left unflushed: SkipPending commits the DBAL transaction and drops it.
@@ -155,7 +155,7 @@ $this->transaction()->transact(
 
     public function openNewModePersistsRow(): void
     {
-$this->transaction()->transact(
+        $this->transaction()->transact(
             callback: static function (EntityManagerInterface $em): void {
                 $em->persist(new User('opennew@example.com', 1));
             },
@@ -167,7 +167,7 @@ $this->transaction()->transact(
 
     public function ignoreModePersistsRow(): void
     {
-$this->transaction()->transact(
+        $this->transaction()->transact(
             callback: static function (EntityManagerInterface $em): void {
                 $em->persist(new User('ignore@example.com', 1));
             },
@@ -179,7 +179,7 @@ $this->transaction()->transact(
 
     public function resolvesDatabaseByEntityClass(): void
     {
-$this->transaction()->transact(
+        $this->transaction()->transact(
             callback: static function (EntityManagerInterface $em, DatabaseInterface $db): void {
                 Assert::same($db->getName(), 'default');
             },
@@ -189,7 +189,7 @@ $this->transaction()->transact(
 
     public function rejectsEntityFromAnotherDriver(): void
     {
-// Post is mapped to the in-memory SQLite `secondary` connection.
+        // Post is mapped to the in-memory SQLite `secondary` connection.
         // Persisting it through a transaction scoped to the `default` driver must be rejected.
         try {
             $this->transaction()->transact(static function (EntityManagerInterface $em): void {
@@ -205,7 +205,7 @@ $this->transaction()->transact(
 
     public function deletesRowWithinTransaction(): void
     {
-$this->transaction()->transact(static function (EntityManagerInterface $em): void {
+        $this->transaction()->transact(static function (EntityManagerInterface $em): void {
             $em->persist(new User('todelete@example.com', 1));
         });
         Assert::same($this->database()->table('user')->count(), 1);
@@ -222,7 +222,7 @@ $this->transaction()->transact(static function (EntityManagerInterface $em): voi
 
     public function updatesRowWithinTransaction(): void
     {
-$this->transaction()->transact(static function (EntityManagerInterface $em): void {
+        $this->transaction()->transact(static function (EntityManagerInterface $em): void {
             $em->persist(new User('update@example.com', 1));
         });
 
@@ -240,7 +240,7 @@ $this->transaction()->transact(static function (EntityManagerInterface $em): voi
 
     public function exceptionFromCallbackPropagates(): void
     {
-try {
+        try {
             $this->transaction()->transact(static function (EntityManagerInterface $em): void {
                 $em->persist(new User('nope@example.com', 1));
                 throw new \RuntimeException('explicit');
