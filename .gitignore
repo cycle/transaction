@@ -5,3 +5,5 @@
 /composer.lock
 /.env
 *.log
+/vendor-bin/*/vendor/
+/vendor-bin/*/composer.lock

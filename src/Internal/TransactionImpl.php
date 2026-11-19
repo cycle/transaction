@@ -90,9 +90,9 @@ final readonly class TransactionImpl implements Transaction
      */
     private function resolveDatabase(?string $source): DatabaseInterface
     {
-        return match(true) {
+        return match (true) {
             $source === null  => $this->dbs->database(),
-           \class_exists($source) => $this->orm->getSource($this->orm->resolveRole($source))->getDatabase(),
+            \class_exists($source) => $this->orm->getSource($this->orm->resolveRole($source))->getDatabase(),
             default => $this->dbs->database($source),
         };
     }

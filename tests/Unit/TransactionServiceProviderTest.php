@@ -30,12 +30,6 @@ final class TransactionServiceProviderTest
 {
     private TestEnvironment $env;
 
-    #[BeforeTest]
-    public function setUp(): void
-    {
-        $this->env = SqliteEnvironment::create();
-    }
-
     public function itResolvesTransactionAsASingleton(): void
     {
         $container = new Container();
@@ -52,5 +46,11 @@ final class TransactionServiceProviderTest
         Assert::instanceOf($transaction, TransactionImpl::class);
         // A singleton must hand back the very same instance on every resolution.
         Assert::same($container->make(Transaction::class), $transaction);
+    }
+
+    #[BeforeTest]
+    public function setUp(): void
+    {
+        $this->env = SqliteEnvironment::create();
     }
 }

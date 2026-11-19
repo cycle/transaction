@@ -27,18 +27,6 @@ final class EntityManagerTest
 {
     private TestEnvironment $env;
 
-    #[BeforeTest]
-    public function setUp(): void
-    {
-        $this->env = SqliteEnvironment::create();
-    }
-
-    #[AfterTest]
-    public function tearDown(): void
-    {
-        $this->env->dropTables();
-    }
-
     public function runWithoutQueuedEntitiesReturnsEmptyState(): void
     {
         $em = $this->makeManager();
@@ -348,6 +336,17 @@ final class EntityManagerTest
         }
     }
 
+    #[BeforeTest]
+    public function setUp(): void
+    {
+        $this->env = SqliteEnvironment::create();
+    }
+
+    #[AfterTest]
+    public function tearDown(): void
+    {
+        $this->env->dropTables();
+    }
 
     private function makeManager(): EntityManager
     {
