@@ -4,11 +4,12 @@ name: 📀 SQLServer
 
 on:  # yamllint disable-line rule:truthy
   pull_request:
-    branches:
-      - 1.x
   push:
     branches:
       - 1.x
+
+permissions:
+  contents: read
 
 jobs:
   acceptance:
@@ -16,7 +17,7 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     concurrency:
-      cancel-in-progress: true
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
       group: mssql-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ matrix.php-version }}
     strategy:
       fail-fast: false
@@ -29,6 +30,8 @@ jobs:
     steps:
       - name: 📦 Check out the codebase
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: 🛠️ Install ODBC driver
         run: |

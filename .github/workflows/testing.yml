@@ -4,19 +4,20 @@ name: 🧩 Unit
 
 on:  # yamllint disable-line rule:truthy
   pull_request:
-    branches:
-      - 1.x
   push:
     branches:
       - 1.x
 
+permissions:
+  contents: read
+
 jobs:
   unit:
-    name: Unit · PHP ${{ matrix.php-version }}
+    name: Unit · PHP ${{ matrix.php-version }} · ${{ matrix.dependencies }}
     timeout-minutes: 4
     runs-on: ${{ matrix.os }}
     concurrency:
-      cancel-in-progress: true
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
       group: unit-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ matrix.php-version }}-${{ matrix.dependencies }}
     strategy:
       fail-fast: false
@@ -29,12 +30,13 @@ jobs:
           - '8.4'
           - '8.5'
         dependencies:
-          # - lowest
-          # - locked
+          - lowest
           - highest
     steps:
       - name: 📦 Check out the codebase
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: 🛠️ Setup PHP
         uses: shivammathur/setup-php@v2
@@ -61,11 +63,13 @@ jobs:
     timeout-minutes: 4
     runs-on: ubuntu-latest
     concurrency:
-      cancel-in-progress: true
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
       group: code-coverage-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
     steps:
       - name: 📦 Check out the codebase
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: 🛠️ Setup PHP
         uses: shivammathur/setup-php@v2

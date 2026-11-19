@@ -4,11 +4,12 @@ name: 🧬 Mutation Tests
 
 on:  # yamllint disable-line rule:truthy
   pull_request:
-    branches:
-      - 1.x
   push:
     branches:
       - 1.x
+
+permissions:
+  contents: read
 
 jobs:
   infection:
@@ -16,7 +17,7 @@ jobs:
     timeout-minutes: 10
     runs-on: ${{ matrix.os }}
     concurrency:
-      cancel-in-progress: true
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
       group: infection-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ matrix.php-version }}
     strategy:
       fail-fast: false
@@ -30,6 +31,8 @@ jobs:
     steps:
       - name: 📦 Check out the codebase
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: 🛠️ Setup PHP
         uses: shivammathur/setup-php@v2
@@ -45,6 +48,9 @@ jobs:
           COMPOSER_ROOT_VERSION: '1.x-dev'
         with:
           dependency-versions: ${{ matrix.dependencies }}
+
+      - name: 📥 Install Infection
+        run: composer bin infection install --no-interaction --no-progress
 
       - name: 🧬 Run mutation testing with Infection
         run: composer infect:ci

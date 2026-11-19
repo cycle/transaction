@@ -1,0 +1,22 @@
+---
+
+name: 🔍 Static analysis
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+  push:
+    branches:
+      - 1.x
+
+permissions:
+  contents: read
+
+jobs:
+  psalm:
+    uses: spiral/gh-actions/.github/workflows/psalm.yml@master
+    with:
+      os: >-
+        ['ubuntu-latest']
+      php: '["8.4"]'
+      bin-tool: psalm
+      command: composer psalm:ci
