@@ -24,7 +24,7 @@
         "bamarni/composer-bin-plugin": "^1.9",
         "buggregator/trap": "^1.20",
         "cycle/skills": "1.x-dev",
-        "cycle/testing": "^0.1",
+        "cycle/testing": "^0.1.1",
         "illuminate/container": "^12 || ^13",
         "illuminate/support": "^12 || ^13",
         "llm/skills": "^1.20",
