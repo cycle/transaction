@@ -9,12 +9,6 @@
             "homepage": "https://github.com/roxblnfk"
         }
     ],
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/cycle/testing"
-        }
-    ],
     "require": {
         "php": ">=8.2",
         "cycle/database": "^2.23",
