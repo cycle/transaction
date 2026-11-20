@@ -7,7 +7,7 @@
     },
     "timeout": 10,
     "testFramework": "testo",
-    "testFrameworkOptions": "--group=!driver",
+    "testFrameworkOptions": "--suite=Unit",
     "tmpDir": "runtime",
     "logs": {
         "stryker": {
