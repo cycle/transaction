@@ -54,18 +54,18 @@
         }
     },
     "scripts": {
+        "db:up": "docker compose -f vendor/cycle/testing/resources/docker/compose.yaml up -d --wait",
+        "db:down": "docker compose -f vendor/cycle/testing/resources/docker/compose.yaml down -v",
         "test": "testo",
         "test:unit": "testo --suite=Unit",
-        "test:acceptance": "testo --suite=Acceptance",
-        "test:integration": "testo --suite=Acceptance",
-        "test:no-driver": "testo --group=!driver",
-        "test:sqlite": "testo --suite=Acceptance --group=driver-sqlite",
-        "test:mysql": "testo --suite=Acceptance --group=driver-mysql",
-        "test:postgres": "testo --suite=Acceptance --group=driver-postgres",
-        "test:sqlserver": "testo --suite=Acceptance --group=driver-sqlserver",
+        "test:sqlite": "testo --suite=Feature/SQLite --suite=Acceptance/SQLite --suite=Regression/SQLite",
+        "test:mysql": "testo --suite=Feature/MySQL --suite=Acceptance/MySQL --suite=Regression/MySQL",
+        "test:postgres": "testo --suite=Feature/Postgres --suite=Acceptance/Postgres --suite=Regression/Postgres",
+        "test:sqlserver": "testo --suite=Feature/SQLServer --suite=Acceptance/SQLServer --suite=Regression/SQLServer",
         "test:cc": [
             "@putenv XDEBUG_MODE=coverage",
-            "testo --group=!driver-mysql --group=!driver-postgres --group=!driver-sqlserver --coverage"
+            "@putenv DB_DRIVERS=sqlite",
+            "testo --coverage"
         ],
         "cs:diff": "php-cs-fixer fix --dry-run -v --diff --config=vendor-bin/code-style/.php-cs-fixer.dist.php",
         "cs:fix": "php-cs-fixer fix -v --config=vendor-bin/code-style/.php-cs-fixer.dist.php",

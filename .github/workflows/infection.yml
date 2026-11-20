@@ -43,6 +43,7 @@ jobs:
           coverage: xdebug
 
       - name: 📥 Install dependencies with composer
+        # TODO(cycle/testing): switch to the released package
         uses: ramsey/composer-install@v3
         env:
           COMPOSER_ROOT_VERSION: '1.x-dev'
