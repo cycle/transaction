@@ -20,8 +20,7 @@ use Cycle\Transaction\Transaction;
  * Builds a ready-to-use ORM + DBAL environment with two databases (`default` and `secondary`)
  * and creates the physical `user` / `post` tables.
  *
- * Reused by both Unit tests (two SQLite connections) and Acceptance tests (a real driver as the
- * `default` connection plus an in-memory SQLite as the `secondary` one).
+ * The Unit tests run it on two in-memory SQLite connections ({@see SqliteEnvironment}).
  */
 final class TestEnvironment
 {

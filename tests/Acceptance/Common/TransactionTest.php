@@ -6,35 +6,47 @@ namespace Cycle\Transaction\Tests\Acceptance\Common;
 
 use Cycle\Database\DatabaseInterface;
 use Cycle\ORM\EntityManagerInterface;
-use Cycle\ORM\ORMInterface;
+use Cycle\Testing\ORM\OrmTestCase;
 use Cycle\Transaction\Exception\TransactionException;
 use Cycle\Transaction\FlushMode;
+use Cycle\Transaction\Internal\TransactionImpl;
 use Cycle\Transaction\Tests\Fixtures\Post;
 use Cycle\Transaction\Tests\Fixtures\User;
+use Cycle\Transaction\Transaction;
 use Cycle\Transaction\TransactionMode;
 use Testo\Assert;
-use Testo\Filter\Group;
+use Testo\Codecov\Covers;
+use Testo\Lifecycle\BeforeTest;
+use Testo\Test;
 
 /**
- * Acceptance scenarios for {@see \Cycle\Transaction\Transaction} executed against a real database.
- *
- * Abstract: discovered and run only through the concrete per-driver subclasses under
- * `tests/Acceptance/Driver`. Each subclass supplies its driver via {@see BaseTestCase::driverConfig()};
- * {@see BaseTestCase::bootEnvironment()} boots the environment before every test. Which drivers a test
- * case runs on is expressed purely by inheritance — a subclass exists only for the supported drivers.
+ * Scenarios of {@see Transaction} against the database of the suite (`default`); `Post` is mapped to
+ * the in-memory SQLite `secondary` database.
  */
-#[Group('driver')]
-abstract class TransactionTestCase extends BaseTestCase
+#[Test]
+#[Covers(TransactionImpl::class)]
+final class TransactionTest extends OrmTestCase
 {
+    #[BeforeTest]
+    public function createTables(): void
+    {
+        $this->makeTable('user', ['id' => 'primary', 'email' => 'string', 'balance' => 'integer'], defaults: ['balance' => 0]);
+
+        $post = $this->dbal->database('secondary')->table('post')->getSchema();
+        $post->primary('id');
+        $post->string('title');
+        $post->save();
+    }
+
     public function commitsInsertedRow(): void
     {
         $this->transaction()->transact(static function (EntityManagerInterface $em): void {
             $em->persist(new User('alice@example.com', 100));
         });
 
-        Assert::same($this->database()->table('user')->count(), 1);
+        Assert::same($this->database->table('user')->count(), 1);
 
-        $row = $this->database()->table('user')->select()->run()->fetch();
+        $row = $this->database->table('user')->select()->run()->fetch();
         Assert::same($row['email'], 'alice@example.com');
         Assert::same((int) $row['balance'], 100);
     }
@@ -47,7 +59,7 @@ abstract class TransactionTestCase extends BaseTestCase
             $em->persist(new User('c@example.com', 3));
         });
 
-        Assert::same($this->database()->table('user')->count(), 3);
+        Assert::same($this->database->table('user')->count(), 3);
     }
 
     public function rollsBackOnExceptionInCallback(): void
@@ -62,7 +74,7 @@ abstract class TransactionTestCase extends BaseTestCase
             Assert::same($e->getMessage(), 'abort');
         }
 
-        Assert::same($this->database()->table('user')->count(), 0);
+        Assert::same($this->database->table('user')->count(), 0);
     }
 
     public function returnsCallbackResult(): void
@@ -94,7 +106,7 @@ abstract class TransactionTestCase extends BaseTestCase
             $em->persist(new User('second@example.com', 20));
         });
 
-        Assert::same($this->database()->table('user')->count(), 2);
+        Assert::same($this->database->table('user')->count(), 2);
     }
 
     public function failOnPendingRejectsPendingChanges(): void
@@ -112,7 +124,7 @@ abstract class TransactionTestCase extends BaseTestCase
         }
 
         // The aborted transaction must have rolled back.
-        Assert::same($this->database()->table('user')->count(), 0);
+        Assert::same($this->database->table('user')->count(), 0);
     }
 
     public function failOnPendingAllowsManualRun(): void
@@ -125,7 +137,7 @@ abstract class TransactionTestCase extends BaseTestCase
             flush: FlushMode::FailOnPending,
         );
 
-        Assert::same($this->database()->table('user')->count(), 1);
+        Assert::same($this->database->table('user')->count(), 1);
     }
 
     public function onWriteFlushPersistsWithoutManualRun(): void
@@ -137,7 +149,7 @@ abstract class TransactionTestCase extends BaseTestCase
             flush: FlushMode::OnWrite,
         );
 
-        Assert::same($this->database()->table('user')->count(), 1);
+        Assert::same($this->database->table('user')->count(), 1);
     }
 
     public function skipPendingDiscardsUnflushedChanges(): void
@@ -150,7 +162,7 @@ abstract class TransactionTestCase extends BaseTestCase
             flush: FlushMode::SkipPending,
         );
 
-        Assert::same($this->database()->table('user')->count(), 0);
+        Assert::same($this->database->table('user')->count(), 0);
     }
 
     public function openNewModePersistsRow(): void
@@ -162,7 +174,7 @@ abstract class TransactionTestCase extends BaseTestCase
             emMode: TransactionMode::OpenNew,
         );
 
-        Assert::same($this->database()->table('user')->count(), 1);
+        Assert::same($this->database->table('user')->count(), 1);
     }
 
     public function ignoreModePersistsRow(): void
@@ -174,7 +186,7 @@ abstract class TransactionTestCase extends BaseTestCase
             emMode: TransactionMode::Ignore,
         );
 
-        Assert::same($this->database()->table('user')->count(), 1);
+        Assert::same($this->database->table('user')->count(), 1);
     }
 
     public function resolvesDatabaseByEntityClass(): void
@@ -200,7 +212,7 @@ abstract class TransactionTestCase extends BaseTestCase
             Assert::string($e->getMessage())->contains('does not match the transaction database driver');
         }
 
-        Assert::same($this->database()->table('user')->count(), 0);
+        Assert::same($this->database->table('user')->count(), 0);
     }
 
     public function deletesRowWithinTransaction(): void
@@ -208,16 +220,16 @@ abstract class TransactionTestCase extends BaseTestCase
         $this->transaction()->transact(static function (EntityManagerInterface $em): void {
             $em->persist(new User('todelete@example.com', 1));
         });
-        Assert::same($this->database()->table('user')->count(), 1);
+        Assert::same($this->database->table('user')->count(), 1);
 
-        $user = $this->orm()->getRepository(User::class)->findOne();
+        $user = $this->orm->getRepository(User::class)->findOne();
         Assert::instanceOf($user, User::class);
 
         $this->transaction()->transact(static function (EntityManagerInterface $em) use ($user): void {
             $em->delete($user);
         });
 
-        Assert::same($this->database()->table('user')->count(), 0);
+        Assert::same($this->database->table('user')->count(), 0);
     }
 
     public function updatesRowWithinTransaction(): void
@@ -226,7 +238,7 @@ abstract class TransactionTestCase extends BaseTestCase
             $em->persist(new User('update@example.com', 1));
         });
 
-        $user = $this->orm()->getRepository(User::class)->findOne();
+        $user = $this->orm->getRepository(User::class)->findOne();
         Assert::instanceOf($user, User::class);
 
         $this->transaction()->transact(static function (EntityManagerInterface $em) use ($user): void {
@@ -234,7 +246,7 @@ abstract class TransactionTestCase extends BaseTestCase
             $em->persist($user);
         });
 
-        $row = $this->database()->table('user')->select()->run()->fetch();
+        $row = $this->database->table('user')->select()->run()->fetch();
         Assert::same((int) $row['balance'], 999);
     }
 
@@ -250,12 +262,11 @@ abstract class TransactionTestCase extends BaseTestCase
             Assert::same($e->getMessage(), 'explicit');
         }
 
-        Assert::same($this->database()->table('user')->count(), 0);
+        Assert::same($this->database->table('user')->count(), 0);
     }
 
-    protected function orm(): ORMInterface
+    private function transaction(): Transaction
     {
-        \assert($this->env !== null);
-        return $this->env->orm;
+        return new TransactionImpl($this->orm, $this->dbal);
     }
 }
