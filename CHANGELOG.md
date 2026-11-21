@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.1](https://github.com/cycle/transaction/compare/1.1.0...1.1.1) (2026-11-21)
+
+
+### Documentation
+
+* move the Discord badge to the first row ([#7](https://github.com/cycle/transaction/issues/7)) ([c549ad3](https://github.com/cycle/transaction/commit/c549ad3b4d46966aa86ab1803be26c1f0f256803))
+* restructure the README by the cycle template ([#5](https://github.com/cycle/transaction/issues/5)) ([ba8a79b](https://github.com/cycle/transaction/commit/ba8a79b86f14c892fd3811eb9e77b4202bccd41f))
+
+
+### Dependencies
+
+* raise dependency minimums and polish the tooling ([#3](https://github.com/cycle/transaction/issues/3)) ([1bdc637](https://github.com/cycle/transaction/commit/1bdc637ccbea5df5163afb778e0147f81c4ff3a6))
+* raise the minimum versions of the cycle packages ([#15](https://github.com/cycle/transaction/issues/15)) ([9d3bbc2](https://github.com/cycle/transaction/commit/9d3bbc2a594f479368bae5fa4db179bc4f13b682))
+
 ## [1.1.0](https://github.com/cycle/transaction/compare/1.0.0...1.1.0) (2026-06-25)
 
 
