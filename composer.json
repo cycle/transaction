@@ -26,7 +26,7 @@
         "spiral/boot": "^3.18",
         "spiral/cycle-bridge": "^2.13",
         "testo/testo": "^0.10.60",
-        "yiisoft/di": "^1.4"
+        "yiisoft/di": "^1.5"
     },
     "suggest": {
         "spiral/cycle-bridge": "Provides integration with the Spiral Framework via TransactionBootloader",
